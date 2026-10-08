@@ -61,7 +61,7 @@ flowchart LR
 | ContentEntry（JSON，只读） | id | sectionId, sectionTitle, title, cost, plainSpeak, benefit, evidenceGrade, source, note | 「说人话」(plainSpeak) 单独成列——卡片与搜索的主力文本 |
 | UserEntry（Dexie） | id | `status: todo/habit/done/rejected`, favorite, decidedAt, doneAt | 一个条目同一时刻只有一个用户状态。**无行 = 未评估（new）**：任何决策才写入行；恢复/删除 = 删行 |
 | CheckIn（Dexie） | `id`（entryId+date） | entryId, date(`YYYY-MM-DD` 本地日期) | 连续天数运行时计算，不存冗余；断签即归零，无补签 |
-| DailyRead（Dexie） | date | entryId | 按日期种子从「未评估」池随机；同一天刷新不变。若已全部评估，回退到全量池 |
+| DailyRead（Dexie） | date | entryId | 按日期种子从「未评估 × 排除近 30 天已读」池随机；同一天刷新不变；池不足时放宽去重，全部评估完回退全量池 |
 
 状态机：
 
@@ -70,12 +70,14 @@ new（无行）─右滑·选做一次→ todo ─打勾→ done（可撤销回 
 new（无行）─右滑·选重复──→ habit（每日打勾/取消）
 new（无行）─左滑────────→ rejected（永久隐藏；设置页恢复 = 删行）
 todo/habit ─清单删除（删行）→ new（下次滑卡再现）
+todo ↔ habit 互转（favorite 保留；CheckIn 不受影响）
+删除 habit 时 CheckIn 历史保留；连续天数只从当次 decidedAt 起算（ADR-0002）
 进度 x/672 = UserEntry 行数 / entries 总数
 
 ## 页面与交互（底部 4 Tab）
 
 1. **挑**（默认页）
-   - 卡片 deck：标题 + 说人话 + 证据等级徽章；Pointer Events 手写左/右滑。
+   - 卡片 deck：**按书序出场**（节内条目即上游性价比排序）——标题 + 说人话 + 证据等级徽章；Pointer Events 手写左/右滑。
    - 右滑 → 底部弹层二选一：「做一次 → 进清单」/「要重复 → 设为打卡」。
    - 左滑 → `rejected`，永久隐藏。
    - 顶栏进度 `已评估 x/672`；全部评估完 → 空状态引导去清单/打卡。
@@ -108,6 +110,8 @@ todo/habit ─清单删除（删行）→ new（下次滑卡再现）
 - 语义搜索 / embedding
 - 账号、云同步、多设备
 - 打卡补签
+- 自建待办（书里没有的事项；将来真需要以独立表后加，不影响现有模型）
+- 自定义打卡频率（每周/每月；低频事项应设为待做）
 - 证据等级筛选（官网有，v1 不做）
 - 多语言翻译版
 - Capacitor APK 打包（将来想要再单独立项，不影响当前代码结构）
@@ -115,3 +119,16 @@ todo/habit ─清单删除（删行）→ new（下次滑卡再现）
 ## 许可
 
 上游内容 CC-BY-4.0、代码 MIT。自用不分发无附加义务；若将来分发，需保留内容署名。
+
+## 第 2 幕拷问裁决（grilling，2026-10-08）
+
+| # | 决策点 | 裁决 |
+|---|---|---|
+| 拷1 | 自建待办 | 不做，v1 纯书内条目 |
+| 拷2 | 打卡频率 | 每日 only，无自定义频率 |
+| 拷3 | 状态转换完备性 | todo↔habit 可互转；删除 habit 保留 CheckIn 历史；连续天数只从当次 decidedAt 起算；done 可撤销回 todo |
+| 拷4 | 滑卡顺序 | 书序（上游性价比排序即产品体验） |
+| 拷5 | 部署 | 公开 GitHub repo + Pages，README 内 CC-BY 署名 |
+| 拷6 | 每日一读去重 | 排除近 30 天已读，池不足放宽 |
+
+术语裁决见 `CONTEXT.md`；架构决策见 `docs/adr/0001-content-as-build-artifact.md`、`docs/adr/0002-immutable-checkins.md`。
