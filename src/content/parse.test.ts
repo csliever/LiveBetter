@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { parseBook, parseSectionFile } from './parse'
 
-const text = readFileSync(new URL('../../tests/fixture-book05.md', import.meta.url), 'utf8')
+const text = readFileSync('tests/fixture-book05.md', 'utf8')
 
 test('解析节标题与节号（文件名序号 + # 标题）', () => {
   const { section } = parseSectionFile({ name: '05-不要浪费钱.md', text })
