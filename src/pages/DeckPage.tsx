@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { book } from '../content/book'
 import type { ContentEntry } from '../content/types'
 import { useUserEntries } from '../db/use-user'
@@ -12,11 +12,13 @@ export function swipeAction(dx: number, threshold = 80): 'left' | 'right' | null
   return null
 }
 
-function Card({ entry, onLeft, onRight }: { entry: ContentEntry; onLeft: () => void; onRight: () => void }) {
+function Card({ entry, onLeft, onRight, onOpen }: { entry: ContentEntry; onLeft: () => void; onRight: () => void; onOpen: () => void }) {
   const [dx, setDx] = useState(0)
   const [startX, setStartX] = useState<number | null>(null)
+  const suppressClick = useRef(false)
   const up = () => {
     const a = swipeAction(dx)
+    if (Math.abs(dx) > 8) suppressClick.current = true
     setStartX(null); setDx(0)
     if (a === 'left') onLeft()
     if (a === 'right') onRight()
@@ -25,7 +27,12 @@ function Card({ entry, onLeft, onRight }: { entry: ContentEntry; onLeft: () => v
     <div class="card" data-testid="deck-card" style={{ transform: `translateX(${dx}px)` }}
       onPointerDown={e => setStartX(e.clientX)}
       onPointerMove={e => { if (startX !== null) setDx(e.clientX - startX) }}
-      onPointerUp={up} onPointerLeave={up}>
+      onPointerUp={up} onPointerLeave={up}
+      onClick={e => {
+        if (suppressClick.current) { suppressClick.current = false; return }
+        if ((e.target as HTMLElement).closest('button')) return
+        onOpen()
+      }}>
       <div class="card-top">
         <span class="muted">{book.sections.find(s => s.id === entry.sectionId)?.title}</span>
         <span class="badge">{entry.evidenceGrade}</span>
@@ -77,7 +84,7 @@ export function DeckPage({ onOpenEntry }: { onOpenEntry: (id: string) => void })
       {current ? (
         <Card entry={current}
           onLeft={async () => { await rejectEntry(current.id); reload() }}
-          onRight={() => setSheet(current)} />
+          onRight={() => setSheet(current)} onOpen={() => onOpenEntry(current.id)} />
       ) : (
         <div class="empty">全部评估完了。去「清单」和「打卡」看看。</div>
       )}

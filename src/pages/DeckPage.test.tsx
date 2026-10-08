@@ -54,3 +54,15 @@ test('每日一读卡片渲染', async () => {
   render(<DeckPage onOpenEntry={() => {}} />)
   expect(await screen.findByText('每日一读')).toBeTruthy()
 })
+
+test('轻点卡片（非按钮）→ onOpenEntry(entryId)；点按钮不触发', async () => {
+  const opened: string[] = []
+  render(<DeckPage onOpenEntry={id => opened.push(id)} />)
+  await screen.findByText('每日一读')
+  fireEvent.click(screen.getByText('戒烟'))
+  expect(opened).toEqual(['01-01'])
+  fireEvent.click(screen.getByText('做', { selector: 'button' }))
+  await screen.findByText('做一次（进清单）')
+  fireEvent.click(screen.getByText('做一次（进清单）'))
+  expect(opened).toEqual(['01-01'])
+})
