@@ -21,3 +21,6 @@ venv/
 dist/
 build/
 *.log
+
+# content build upstream clone
+tmp-upstream-htlb/
