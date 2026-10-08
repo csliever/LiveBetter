@@ -59,7 +59,8 @@ flowchart LR
 | 表 | 主键 | 字段 | 说明 |
 |---|---|---|---|
 | ContentEntry（JSON，只读） | id | sectionId, sectionTitle, title, cost, plainSpeak, benefit, evidenceGrade, source, note | 「说人话」(plainSpeak) 单独成列——卡片与搜索的主力文本 |
-| UserEntry（Dexie） | id | `status: todo/habit/done/rejected`, favorite, decidedAt, doneAt | 一个条目同一时刻只有一个用户状态。**无行 = 未评估（new）**：任何决策才写入行；恢复/删除 = 删行 |
+| UserEntry（Dexie） | id | `status: todo/habit/done/rejected`, decidedAt, doneAt | 一个条目同一时刻只有一个用户状态。**无行 = 未评估（new）**：任何决策才写入行；恢复/删除 = 删行 |
+| Favorite（Dexie） | entryId | addedAt | 收藏独立成表：未评估条目也可收藏（CONTEXT.md「收藏独立于决策状态」），不与 UserEntry 行耦合 |
 | CheckIn（Dexie） | `id`（entryId+date） | entryId, date(`YYYY-MM-DD` 本地日期) | 连续天数运行时计算，不存冗余；断签即归零，无补签 |
 | DailyRead（Dexie） | date | entryId | 按日期种子从「未评估 × 排除近 30 天已读」池随机；同一天刷新不变；池不足时放宽去重，全部评估完回退全量池 |
 
@@ -85,7 +86,7 @@ todo ↔ habit 互转（favorite 保留；CheckIn 不受影响）
 2. **清单**：`todo` 列表，打勾 → `done` 进折叠「已完成」区（可撤销）；条目左滑删除（回 `new`）。
 3. **打卡**：`habit` 列表，今日打勾/取消；每条显示当前连续天数。
 4. **浏览**：34 节分组 → 条目详情（全字段 + 收藏星标 + 「加清单/设为打卡」入口）；顶部搜索框，内存全量过滤标题+说人话+收益（672 条无需索引引擎）；收藏视图入口。
-5. **设置**：「不做」列表（查看/恢复）；数据导出/导入 JSON（备份决策与打卡记录）。
+5. **设置**：「不做」列表（查看/恢复）；数据导出/导入 JSON（备份决策、打卡与收藏记录）。
 
 ## 离线与部署
 
