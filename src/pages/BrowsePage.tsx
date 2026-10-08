@@ -30,7 +30,7 @@ export function BrowsePage({ onOpenEntry }: { onOpenEntry: (id: string) => void 
           <ul class="rows">
             {es.map(e => (
               <li class="row" key={e.id} onClick={() => onOpenEntry(e.id)}>
-                <span class="badge">{e.evidenceGrade}</span>
+                <span class={`badge badge-${e.evidenceGrade.toLowerCase()}`}>{e.evidenceGrade}</span>
                 <span class="row-title">{e.title}</span>
               </li>
             ))}

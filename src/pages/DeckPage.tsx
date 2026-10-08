@@ -34,15 +34,24 @@ function Card({ entry, onLeft, onRight, onOpen }: { entry: ContentEntry; onLeft:
         onOpen()
       }}>
       <div class="card-top">
-        <span class="muted">{book.sections.find(s => s.id === entry.sectionId)?.title}</span>
-        <span class="badge">{entry.evidenceGrade}</span>
+        <span class={`badge badge-${entry.evidenceGrade.toLowerCase()}`}>{entry.evidenceGrade}</span>
       </div>
       <h3 class="card-title">{entry.title}</h3>
       <p class="plain">{entry.plainSpeak}</p>
+      {entry.cost && <p class="cost"><b>成本：</b>{entry.cost}</p>}
+      {entry.meta && (
+        <div class="chips">
+          <span class="chip" data-testid="meta-chip">钱 {entry.meta.money ?? '?'}</span>
+          <span class="chip" data-testid="meta-chip">时间 {entry.meta.time ?? '?'}</span>
+          <span class="chip" data-testid="meta-chip">毅力 {entry.meta.willpower ?? '?'}</span>
+          <span class="chip" data-testid="meta-chip">收益 {entry.meta.gain ?? '?'}</span>
+        </div>
+      )}
       <div class="actions">
         <button class="btn" onClick={onLeft}>不做</button>
         <button class="btn btn-primary" onClick={onRight}>做</button>
       </div>
+      <p class="gesture-hint muted">轻点看完整详情 · 左滑不做 · 右滑要做</p>
     </div>
   )
 }
@@ -74,6 +83,7 @@ export function DeckPage({ onOpenEntry }: { onOpenEntry: (id: string) => void })
 
   return (
     <section class="page">
+      <div class="progress-wrap"><div class="progress-bar" data-testid="progress-bar" style={{ width: `${(100 * rows.length) / book.entries.length}%` }} /></div>
       <div class="progress">已评估 {rows.length}/{book.entries.length}</div>
       {dailyEntry && (
         <div class="daily card" onClick={() => onOpenEntry(dailyEntry.id)}>
@@ -82,9 +92,14 @@ export function DeckPage({ onOpenEntry }: { onOpenEntry: (id: string) => void })
         </div>
       )}
       {current ? (
-        <Card entry={current}
-          onLeft={async () => { await rejectEntry(current.id); reload() }}
-          onRight={() => setSheet(current)} onOpen={() => onOpenEntry(current.id)} />
+        <div class="deck-area">
+          {book.entries.filter(e => !decided.has(e.id) && e.id !== current.id).slice(0, 2).map(g => (
+            <div class="deck-ghost" data-testid="deck-ghost" key={g.id}><div class="card-title">{g.title}</div></div>
+          ))}
+          <Card entry={current}
+            onLeft={async () => { await rejectEntry(current.id); reload() }}
+            onRight={() => setSheet(current)} onOpen={() => onOpenEntry(current.id)} />
+        </div>
       ) : (
         <div class="empty">全部评估完了。去「清单」和「打卡」看看。</div>
       )}

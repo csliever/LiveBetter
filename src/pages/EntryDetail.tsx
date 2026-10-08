@@ -24,7 +24,7 @@ export function EntryDetail({ entryId, onClose }: { entryId: string; onClose: ()
         {e.cost && <p><b>成本：</b>{e.cost}</p>}
         {e.benefit && <p><b>收益：</b>{e.benefit}</p>}
         {e.note && <p><b>备注：</b>{e.note}</p>}
-        {e.source && <p class="muted"><b>来源：</b>{e.source}</p>}
+        {e.source && <p class="muted source"><b>来源：</b><LinkifySource text={e.source} /></p>}
         <div class="actions">
           {!row && <>
             <button class="btn btn-primary" onClick={() => act(() => decideTodo(entryId))}>做一次</button>
@@ -44,5 +44,16 @@ export function EntryDetail({ entryId, onClose }: { entryId: string; onClose: ()
         </div>
       </div>
     </div>
+  )
+}
+
+function LinkifySource({ text }: { text: string }) {
+  const parts = text.split(/(<https?:\/\/[^>]+>)/g)
+  return (
+    <>
+      {parts.map((p, i) => p.startsWith('<http')
+        ? <a key={i} href={p.slice(1, -1)} target="_blank" rel="noopener noreferrer">{p.slice(1, -1)}</a>
+        : p)}
+    </>
   )
 }

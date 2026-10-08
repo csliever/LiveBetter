@@ -25,12 +25,14 @@ export function App() {
         {tab === 'settings' && <SettingsPage />}
       </main>
       {detailId && <EntryDetail entryId={detailId} onClose={() => setDetailId(null)} />}
-      <nav class="tabs" role="navigation">
-        <button class={tab === 'deck' ? 'on' : ''} onClick={() => setTab('deck')}>挑</button>
-        <button class={tab === 'list' ? 'on' : ''} onClick={() => setTab('list')}>清单</button>
-        <button class={tab === 'habits' ? 'on' : ''} onClick={() => setTab('habits')}>打卡</button>
-        <button class={tab === 'browse' ? 'on' : ''} onClick={() => setTab('browse')}>浏览</button>
-      </nav>
+      <div class="tabs-wrap">
+        <nav class="tabs" role="navigation">
+          <button class={tab === 'deck' ? 'on' : ''} onClick={() => setTab('deck')}>挑</button>
+          <button class={tab === 'list' ? 'on' : ''} onClick={() => setTab('list')}>清单</button>
+          <button class={tab === 'habits' ? 'on' : ''} onClick={() => setTab('habits')}>打卡</button>
+          <button class={tab === 'browse' ? 'on' : ''} onClick={() => setTab('browse')}>浏览</button>
+        </nav>
+      </div>
     </div>
   )
 }
