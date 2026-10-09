@@ -18,16 +18,27 @@ vi.mock('../content/book', () => ({
 
 beforeEach(async () => { await db.delete(); await db.open() })
 
-test('分组列出条目；搜索过滤标题/说人话', async () => {
+test('默认收起成目录；点击节头展开/再收起', async () => {
   render(<BrowsePage onOpenEntry={() => {}} />)
-  expect(await screen.findByText('戒烟')).toBeTruthy()
-  expect(screen.getByText('不买彩票')).toBeTruthy()
-  fireEvent.input(screen.getByPlaceholderText('搜索标题/说人话/收益'), { target: { value: '彩票' } })
-  expect(screen.getByText('不买彩票')).toBeTruthy()
+  const head = await screen.findByRole('button', { name: /不要早死/ })
+  expect(head.getAttribute('aria-expanded')).toBe('false')
+  expect(screen.queryByText('戒烟')).toBeNull() // 默认收起
+  expect(screen.getByText('不要浪费钱')).toBeTruthy() // 目录整体可见
+  fireEvent.click(head)
+  expect(head.getAttribute('aria-expanded')).toBe('true')
+  expect(screen.getByText('戒烟')).toBeTruthy()
+  fireEvent.click(head)
   expect(screen.queryByText('戒烟')).toBeNull()
 })
 
-test('只看收藏开关', async () => {
+test('搜索时自动展开命中节、隐藏无命中节', async () => {
+  render(<BrowsePage onOpenEntry={() => {}} />)
+  fireEvent.input(await screen.findByPlaceholderText('搜索标题/说人话/收益'), { target: { value: '彩票' } })
+  expect(await screen.findByText('不买彩票')).toBeTruthy() // 自动展开，无需先点节头
+  expect(screen.queryByText('不要早死')).toBeNull() // 无命中节整体隐藏
+})
+
+test('只看收藏时自动展开含收藏的节', async () => {
   await repo.setFavorite('01-01', true)
   render(<BrowsePage onOpenEntry={() => {}} />)
   fireEvent.click(await screen.findByLabelText('只看收藏'))
